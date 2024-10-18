@@ -3,10 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
     <title>Party Planner</title>
     <script defer src="script.js"></script>
 </head>
 <body>
+    <h1>PARTIES!!!!!</h1>
+    <form>
+        <p>Tell us about your party:</p>
+        <input type="text" placeholder="event name" id="eventName">
+        <input type="datetime-local" placeholder="event date/time" id="eventDateTime">
+        <input type="text" placeholder="event location" id="eventLocation">
+        <input type="text" placeholder="event description" id="eventDescription">
+        <button type="submit">submit</button>
+    </form>
     <ul id="parties"></ul>
 </body>
 </html>

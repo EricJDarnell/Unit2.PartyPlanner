@@ -32,3 +32,13 @@ If you are stuck, try answering the following questions:
 
 EXTENSIONS 
 If you are done early, explore the rsvps and guest endpoints of the API
+
+FETCH is used correctly to GET data from the API.
+  FETCH is used correctly to POST a new party to the API.
+  FETCH is used correctly to DELETE a party from the API.
+Functionality: The App contains a list of names, times, dates, locations, and descriptions of all parties.
+  Each party in the list has a delete button which removes the party when clicked.
+  The app contains a form that allows a user to enter information about a party and add it to the list.
+Code Architecture
+  The DOM is dynamically rendered according to data stored in state.
+  The data stored in state is updated to stay in sync with the API.
