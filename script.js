@@ -12,7 +12,7 @@ const state = {
   events: [],//{id:, name:, description:, date:, location:, …}
   guests: [],//{id:, name:, email:, phone:,}
   rsvps: [],//{id:, guestId:, eventId:,}
-  currentGuest: { name: "Paul Sherer"},
+  currentGuest: [],
 };
  
 function guestList(event) {
@@ -198,7 +198,7 @@ partyList.addEventListener("click", (e) => {
     const delId = e.target.id.split("-")[1]; //button id is ="delete-#id"
     console.log("delId: ", delId);
     // deleteEvent(delId);
-    
+
   } else if (e.target.className === "rsvp") {
     console.log("e.target.id: ", e.target.id);
     const evtId = parseInt(e.target.id.split("-")[1]);
