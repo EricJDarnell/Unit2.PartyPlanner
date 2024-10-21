@@ -19,15 +19,13 @@ function guestList(event) {
   //takes a state.events.id as a prompt
   //filter or reduce rsvp list to only matching event ids.
   const eventRsvpFilter = state.rsvps.filter((r) => r.eventId == event);
-  console.log('eventRsvpFilter: ', eventRsvpFilter);
-  //match the guests using their ids from state.guests
+  //create a new array of guests using the array of eventRsvpFilter
   const guestFilterArray = [];
+  //match the guests using their ids from state.guests
     state.guests.forEach(g => { 
       eventRsvpFilter.forEach((r) => {
         r.guestId == g.id ? guestFilterArray.push(g) : null;
       })});
-  console.log('guestFilterArray: ', guestFilterArray);
-  //map a new array of guests using the array of filteredrsvps
   //send guestFilterArray off to be rendered into HTML
   renderGuests(guestFilterArray, event);
 }
@@ -50,17 +48,14 @@ async function getEvents() {
     const responseEvent = await fetch(EVENT_URL);
     const jsonEvent = await responseEvent.json();
     state.events = jsonEvent.data;
-    console.log("state.events: ", state.events);
 
     const responseRsvp = await fetch(RSVP_URL);
     const jsonRsvp = await responseRsvp.json();
     state.rsvps = jsonRsvp.data;
-    console.log("state.rsvps: ", state.rsvps);
 
     const responseGuest = await fetch(GUEST_URL);
     const jsonGuest = await responseGuest.json();
     state.guests = jsonGuest.data;
-    console.log("state.guests: ", state.guests);
   } catch (error) {
     console.error(error);
   }
@@ -89,10 +84,8 @@ function renderEvents() {
   });
   partyList.replaceChildren(...eventCards);
 
-  if (state.currentGuest.length !== 0) {
-    //TODO add return function overwriting the form
-    console.log("state.currentGuest: ", state.currentGuest);
-    //replace form with Welcome <Guest Name>
+  if (state.currentGuest.length !== 0) { //checks if guest is currently "logged in"
+    //replace children of form element with Welcome <Guest Name>
     const welcomeMsg = document.createElement("h2");
     welcomeMsg.innerText = `Welcome ${state.currentGuest.name}!`;
     guestLog.replaceChildren(welcomeMsg);
@@ -142,7 +135,6 @@ async function deleteEvent(id) {
     const response = await fetch(`${EVENT_URL}/${id}`, {
       method: "DELETE",
     });
-    console.log("delete response:", response);
     if (!response.ok) {
       throw new Error(error.message);
     }
@@ -153,12 +145,11 @@ async function deleteEvent(id) {
   getEvents();
 }
 
-async function deleteGuest(id) {
+async function deleteGuest(id) { //did not utilize, but this function will work
   try {
     const response = await fetch(`${GUEST_URL}/${id}`, {
       method: "DELETE",
     });
-    console.log("delete response:", response);
     if (!response.ok) {
       throw new Error(error.message);
     }
@@ -168,10 +159,9 @@ async function deleteGuest(id) {
   }
   getEvents();
 }
-// deleteGuest();
+// deleteGuest(); not implemented
 
 async function rsvpPost(request) {
-  //TODO Fix this shit!!!
   try {
     const response = await fetch(RSVP_URL, {
       method: "POST",
@@ -193,17 +183,12 @@ async function rsvpPost(request) {
 /**-------------Event Listeners----------------*/
 partyList.addEventListener("click", (e) => {
   e.preventDefault();
-  console.log("e.target: ", e.target);
   if (e.target.className === "delete") {
     const delId = e.target.id.split("-")[1]; //button id is ="delete-#id"
-    console.log("delId: ", delId);
-    // deleteEvent(delId);
+    deleteEvent(delId);
 
   } else if (e.target.className === "rsvp") {
-    console.log("e.target.id: ", e.target.id);
     const evtId = parseInt(e.target.id.split("-")[1]);
-    console.log("eventId: ", evtId);
-    console.log("e.target.className: ", e.target.className);
     const guestMatch = state.guests.find(
       (guest) => guest.name === state.currentGuest.name
     );
@@ -243,7 +228,7 @@ guestLog.addEventListener("submit", (e) => {
     phone: guestLog.phone.value,
   };
   state.currentGuest = guestObject;
-  //send update rerquest to add guest to api guest list
+  //send update request to add guest to api guest list
   addGuest(state.currentGuest);
 });
 
