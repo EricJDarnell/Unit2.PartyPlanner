@@ -9,13 +9,128 @@ const form = document.querySelector("#eventSubmission");
 const guestLog = document.querySelector("#guestLog");
 
 const state = {
-  events: [],//{id:, name:, description:, date:, location:, …}
+  events: [],//{id:, name:, description:, date:, location:,}
   guests: [],//{id:, name:, email:, phone:,}
   rsvps: [],//{id:, guestId:, eventId:,}
   currentGuest: [],
 };
  
-function guestList(event) {
+/**--------------Functions-----------------------*/
+//functions that communicate with API--------------------------------------
+async function getEvents() { //sends requests to API for events, guests, and rsvps then updates state object
+  try {
+    const responseEvent = await fetch(EVENT_URL);
+    const jsonEvent = await responseEvent.json();
+    state.events = jsonEvent.data;
+
+    const responseRsvp = await fetch(RSVP_URL);
+    const jsonRsvp = await responseRsvp.json();
+    state.rsvps = jsonRsvp.data;
+    
+    const responseGuest = await fetch(GUEST_URL);
+    const jsonGuest = await responseGuest.json();
+    state.guests = jsonGuest.data;
+  } catch (error) {
+    console.error(error);
+  }
+  renderEvents();
+}
+async function addEvent(event) { //sends POST request to event API
+  try {
+    const response = await fetch(EVENT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // Authorization: "string of some type may be required"
+      body: JSON.stringify(event),
+    });
+    const json = await response.json();
+    console.log('json: ', json);
+
+    if (!response.ok) {
+      throw new Error(json.error.message);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  getEvents();
+}
+async function addGuest(guest) { //sends POST request to guest API
+  try {
+    const response = await fetch(GUEST_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // Authorization: "string of some type may be required"
+      body: JSON.stringify(guest),
+    });
+    const json = await response.json();
+
+    if (!response.ok) {
+      throw new Error(json.error.message);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  getEvents();
+}
+async function deleteEvent(id) { //sends delete request to event API
+  try {
+    const response = await fetch(`${EVENT_URL}/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      throw new Error(error.message);
+    }
+    await response.json();
+  } catch (error) {
+    console.error(error);
+  }
+  getEvents();
+}
+async function rsvpPost(request) { //sends post request to rsvp API
+  try {
+    const response = await fetch(RSVP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // Authorization: "string of some type may be required"
+      body: JSON.stringify(request),
+    });
+    const json = await response.json();
+
+    if (!response.ok) {
+      throw new Error(json.error.message);
+    }
+  } catch (error) {
+    console.error(error);
+  }
+  getEvents();
+}
+async function deleteGuest(id) { //will send delete request to guest API
+  try {
+    const response = await fetch(`${GUEST_URL}/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      throw new Error(error.message);
+    }
+    await response.json();
+  } catch (error) {
+    console.error(error);
+  }
+  getEvents();
+}
+
+//functions that create intermediate objects--------------------
+function rsvpObject(e){ //creates an rsvp object using specific event id
+  const guestMatch = state.guests.find(
+    (guest) => guest.name === state.currentGuest.name
+  );
+  const rsvpRequest = { //create object for post request
+    guestId: guestMatch.id,
+    eventId: e,
+  };
+  rsvpPost(rsvpRequest);
+}
+function guestList(event) { //creates a guest list for the event specified
   //takes a state.events.id as a prompt
   //filter or reduce rsvp list to only matching event ids.
   const eventRsvpFilter = state.rsvps.filter((r) => r.eventId == event);
@@ -30,39 +145,8 @@ function guestList(event) {
   renderGuests(guestFilterArray, event);
 }
 
-function renderGuests(gList, evId){
-  //create a some html with the things
-  const guestSection = document.querySelector(`#guest-list-${evId}`);
-  const renderedList = gList.map((g) => {
-    const individual = document.createElement("p");
-    individual.innerText = g.name;
-    return individual;
-  });
-  guestSection.replaceChildren(...renderedList);
-}
-
-/**--------------Functions-----------------------*/
-//fetch request to retrieve events
-async function getEvents() {
-  try {
-    const responseEvent = await fetch(EVENT_URL);
-    const jsonEvent = await responseEvent.json();
-    state.events = jsonEvent.data;
-
-    const responseRsvp = await fetch(RSVP_URL);
-    const jsonRsvp = await responseRsvp.json();
-    state.rsvps = jsonRsvp.data;
-
-    const responseGuest = await fetch(GUEST_URL);
-    const jsonGuest = await responseGuest.json();
-    state.guests = jsonGuest.data;
-  } catch (error) {
-    console.error(error);
-  }
-  renderEvents();
-}
-
-function renderEvents() {
+//functions that update HTML---------------------------
+function renderEvents() { //updates html with list of events from using state object
   const eventCards = state.events.map((party) => {
     const eventCard = document.createElement("li");
     const eventDateTime = new Date(party.date);
@@ -91,121 +175,41 @@ function renderEvents() {
     guestLog.replaceChildren(welcomeMsg);
   }
 }
-
-async function addEvent(event) {
-  try {
-    const response = await fetch(EVENT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      // Authorization: "string of some type may be required"
-      body: JSON.stringify(event),
-    });
-    const json = await response.json();
-
-    if (!response.ok) {
-      throw new Error(json.error.message);
-    }
-  } catch (error) {
-    console.error(error);
-  }
-  getEvents();
-}
-
-async function addGuest(guest) {
-  try {
-    const response = await fetch(GUEST_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      // Authorization: "string of some type may be required"
-      body: JSON.stringify(guest),
-    });
-    const json = await response.json();
-
-    if (!response.ok) {
-      throw new Error(json.error.message);
-    }
-  } catch (error) {
-    console.error(error);
-  }
-  getEvents();
-}
-
-async function deleteEvent(id) {
-  try {
-    const response = await fetch(`${EVENT_URL}/${id}`, {
-      method: "DELETE",
-    });
-    if (!response.ok) {
-      throw new Error(error.message);
-    }
-    await response.json();
-  } catch (error) {
-    console.error(error);
-  }
-  getEvents();
-}
-
-async function deleteGuest(id) { //did not utilize, but this function will work
-  try {
-    const response = await fetch(`${GUEST_URL}/${id}`, {
-      method: "DELETE",
-    });
-    if (!response.ok) {
-      throw new Error(error.message);
-    }
-    await response.json();
-  } catch (error) {
-    console.error(error);
-  }
-  getEvents();
-}
-// deleteGuest(); not implemented
-
-async function rsvpPost(request) {
-  try {
-    const response = await fetch(RSVP_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      // Authorization: "string of some type may be required"
-      body: JSON.stringify(request),
-    });
-    const json = await response.json();
-
-    if (!response.ok) {
-      throw new Error(json.error.message);
-    }
-  } catch (error) {
-    console.error(error);
-  }
-  getEvents();
+function renderGuests(gList, evId){ //will populate a guest list and overwrite guest list button
+  const guestSection = document.querySelector(`#guest-list-${evId}`);
+  const renderedList = gList.map((g) => {
+    const individual = document.createElement("p");
+    individual.innerHTML = `${g.name}`
+    // <button id="delGuest-${g.id}" class="del-guest">x</button> //if I want to restore guest delete functionality
+    ;
+    return individual;
+  });
+  guestSection.replaceChildren(...renderedList);
 }
 
 /**-------------Event Listeners----------------*/
-partyList.addEventListener("click", (e) => {
+partyList.addEventListener("click", (e) => { //functionality for buttons on party cards
   e.preventDefault();
-  if (e.target.className === "delete") {
+  if (e.target.className === "delete") { //delete buttons
     const delId = e.target.id.split("-")[1]; //button id is ="delete-#id"
     deleteEvent(delId);
 
-  } else if (e.target.className === "rsvp") {
+  } else if (e.target.className === "rsvp") { //rsvp buttons
     const evtId = parseInt(e.target.id.split("-")[1]);
-    const guestMatch = state.guests.find(
-      (guest) => guest.name === state.currentGuest.name
-    );
-    //create object for post request
-    const rsvpRequest = {
-      guestId: guestMatch.id,
-      eventId: evtId,
-    };
-    rsvpPost(rsvpRequest);
-  } else if (e.target.className === "guestList"){
-    const glId = e.target.id.split("-")[1];
-    guestList(glId);
+    rsvpObject(evtId);
+
+  } else if (e.target.className === "guestList"){ //reveals guest list
+    const eveId = e.target.id.split("-")[1];
+    guestList(eveId);
+
+  } else if (e.target.className === "del-guest"){ //deletes guest by id
+    const gId = e.target.id.split("-")[1];
+    deleteGuest(gId);
   }
 });
 
-form.addEventListener("submit", (e) => {
-  //   e.preventDefault();
+form.addEventListener("submit", (e) => { //creates event object
+    e.preventDefault();
   const eventName = form.eventName.value;
   const dateTime = new Date(form.eventDateTime.value);
   const location = form.eventLocation.value;
@@ -220,7 +224,7 @@ form.addEventListener("submit", (e) => {
   addEvent(eventObject);
 });
 
-guestLog.addEventListener("submit", (e) => {
+guestLog.addEventListener("submit", (e) => { //creates guest object
   e.preventDefault();
   const guestObject = {
     name: guestLog.guestName.value,
